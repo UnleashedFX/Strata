@@ -55,7 +55,9 @@ def normalize(v, t: Path):
     if isinstance(v, list):
         return [normalize(x, t) for x in v]
     if isinstance(v, str):
-        return v.replace(str(t), "<T>").replace("\\", "/").replace(setup.EXE, "<EXE>")
+        normalized = v.replace(str(t), "<T>").replace("\\", "/").replace(setup.EXE, "<EXE>")
+        # On Linux/aarch64 EXE is the bare word "strata"; do not mistake the log's strata- prefix for an executable.
+        return normalized.replace("/<EXE>-", "/strata-")
     return v
 
 
@@ -100,6 +102,7 @@ def install(ram, found, argv, answers=None, extra=(), avx512=False, configs=()):
             mock.patch.object(setup, "amd_gpus", lambda: []),
             mock.patch.object(setup, "ram_gb", lambda: ram),
             mock.patch.object(setup, "cpu_info", lambda: ("Test CPU", True, avx512)),
+            mock.patch.object(setup, "ARM", False),       # these profiles simulate ordinary x86 PCs
             mock.patch.object(setup, "page_file_gb", lambda: 16.0),
             mock.patch.object(setup, "is_wsl", lambda: False),
             mock.patch.object(setup, "free_gb", lambda p: 900.0),
